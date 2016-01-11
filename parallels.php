@@ -16,8 +16,18 @@ $results = array();
 
 // Read VM lists
 $vmEscaped = escapeshellarg($vm);
-$output = `/usr/local/bin/prlctl list -a -j $vmEscaped `;
-if ($output) {
+exec("/usr/local/bin/prlctl list -a -j $vmEscaped 2>&1", $output, $exitCode);
+$output = implode($output, "\n");
+
+if ($exitCode !== 0) {
+    $xmlObject = new SimpleXMLElement('<items></items>');
+    $nodeObject = $xmlObject->addChild('item');
+    $nodeObject->addChild('title', $output);
+    $nodeObject->addAttribute('valid', 'no');
+
+    echo $xmlObject->asXML();
+    die;
+} elseif ($output) {
     $vms = json_decode($output);
 }
 
